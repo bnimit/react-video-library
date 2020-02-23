@@ -15,11 +15,12 @@ class Movies extends Component {
   };
 
   handleGenreSelect = genre => {
-    this.setState({ selectedItem: genre });
+    this.setState({ selectedGenre: genre, currentPage: 1 });
   };
 
   componentDidMount() {
-    this.setState({ movies: getMovies(), genre: getGenres() });
+    const genres = [{ name: "All Genres" }, ...getGenres()];
+    this.setState({ movies: getMovies(), genre: genres });
   }
 
   handleDelete = movie => {
@@ -39,9 +40,18 @@ class Movies extends Component {
     this.setState({ movies });
   };
   render() {
-    const { pageSize, currentPage, movies: allmovies } = this.state;
+    const {
+      pageSize,
+      currentPage,
+      movies: allmovies,
+      selectedGenre
+    } = this.state;
     const { length: count } = this.state.movies;
-    const movies = Paginate(allmovies, currentPage, pageSize);
+    const filtered =
+      selectedGenre && selectedGenre._id
+        ? allmovies.filter(m => m.genre._id === selectedGenre._id)
+        : allmovies;
+    const movies = Paginate(filtered, currentPage, pageSize);
 
     if (count === 0)
       return (
@@ -54,13 +64,14 @@ class Movies extends Component {
         <div className="col-3">
           <ListGroup
             items={this.state.genre}
-            selectedItem={this.state.selectedItem}
+            selectedItem={this.state.selectedGenre}
             onItemSelect={this.handleGenreSelect}
           />
         </div>
         <div className="col">
           <p>
-            Showing <strong> {count} </strong> movies from the database
+            Showing <strong> {filtered.length} </strong> movies from the
+            database
           </p>
           <table className="table">
             <thead>
@@ -99,7 +110,7 @@ class Movies extends Component {
             </tbody>
           </table>
           <Pagination
-            itemCount={count}
+            itemCount={filtered.length}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={this.handlePageChange}
